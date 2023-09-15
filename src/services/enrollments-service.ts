@@ -4,12 +4,6 @@ import { invalidDataError, notFoundError } from '@/errors';
 import { addressRepository, CreateAddressParams, enrollmentRepository, CreateEnrollmentParams } from '@/repositories';
 import { exclude } from '@/utils/prisma-utils';
 
-async function getAddressFromCEP(cep: string) {
-  const result = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
-  //console.log('result.data',result.data)
-
-  if(result.data.erro) throw invalidDataError('This zip code does not exist')
-
  type CepFormatado = {
   logradouro: string,
   complemento: string,
@@ -18,23 +12,38 @@ async function getAddressFromCEP(cep: string) {
   uf: string,
 }
 
+async function validatingZipCode(cep: string) {
+  const regexCep = /^\d{8}$/
+  if(!regexCep.test(cep)) throw invalidDataError('This zip code is invalid')
+
+  const result = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
+  if(!result.data || result.data.erro) throw invalidDataError('This zip code does not exist')
+  return result.data
+}
+
+
+async function getAddressFromCEP(cep: string) {
+  
+const result = await validatingZipCode(cep)
+//console.log("resultado em getAddressFromCep", result)  
+
   const cepFormato: CepFormatado  = {
-    logradouro: result.data.logradouro,
-    complemento: result.data.complemento,
-    bairro: result.data.bairro,
-    cidade:  result.data.localidade,
-    uf: result.data.uf,
+    logradouro: result.logradouro,
+    complemento: result.complemento,
+    bairro: result.bairro,
+    cidade:  result.localidade,
+    uf: result.uf,
   }
   // TODO: Tratar regras de negócio e lanças eventuais erros
 
   // FIXME: não estamos interessados em todos os campos
-  return cepFormato;
+   return cepFormato;
 }
 
 async function getOneWithAddressByUserId(userId: number): Promise<GetOneWithAddressByUserIdResult> {
   const enrollmentWithAddress = await enrollmentRepository.findWithAddressByUserId(userId);
 
-  if (!enrollmentWithAddress) throw notFoundError();
+  if (!enrollmentWithAddress) throw invalidDataError("Address doesn't exist!");
 
   const [firstAddress] = enrollmentWithAddress.Address;
   const address = getFirstAddress(firstAddress);
@@ -61,6 +70,8 @@ async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollm
   const address = getAddressForUpsert(params.address);
 
   // TODO - Verificar se o CEP é válido antes de associar ao enrollment.
+  await validatingZipCode(address.cep)
+  console.log('address aqui:', address)
 
   const newEnrollment = await enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, 'userId'));
 
