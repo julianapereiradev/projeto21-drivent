@@ -5,7 +5,7 @@ import cors from 'cors';
 import { handleApplicationErrors } from '@/middlewares';
 import { usersRouter, authenticationRouter, eventsRouter, enrollmentsRouter } from '@/routers';
 import { loadEnv, connectDb, disconnectDB } from '@/config';
-//teste
+
 loadEnv();
 
 const app = express();
