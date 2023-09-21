@@ -1,47 +1,44 @@
 import { TicketType, Ticket } from '@prisma/client';
 import { prisma } from '@/config';
 
-export type CreateTicket = Omit<Ticket, "id">
-export type CreateTicketParams = Omit<Ticket, "id" | "createdAt" | "updatedAt">
+export type CreateTicket = Omit<Ticket, 'id'>;
+export type CreateTicketForPost = Omit<Ticket, 'id' | 'createdAt' | 'updatedAt'>;
 
 async function getTicketsType(): Promise<TicketType[]> {
   const resultGetTicketsType = prisma.ticketType.findMany();
   return resultGetTicketsType;
 }
 
-
-async function postTickets(ticket: CreateTicketParams) {
+async function postTickets(ticket: CreateTicketForPost) {
   return prisma.ticket.create({
     data: {
       ...ticket,
-    }
+    },
   });
 }
 
-
-async function userWithoutEnrollment (userId: number) {
+async function userWithoutEnrollment(userId: number) {
   return await prisma.enrollment.findUnique({
     where: {
-      userId
-    }
-  })
-};
-
-async function userHasEnrollButNotTicket (enrollmentId: number) {
-  return await prisma.ticket.findUnique({
-    where: {
-      enrollmentId
+      userId,
     },
-    include: {
-      TicketType: true
-    }
-  })
+  });
 }
 
+async function userHasEnrollButNotTicket(enrollmentId: number) {
+  return await prisma.ticket.findUnique({
+    where: {
+      enrollmentId,
+    },
+    include: {
+      TicketType: true,
+    },
+  });
+}
 
 export const ticketsRepository = {
   getTicketsType,
   postTickets,
   userWithoutEnrollment,
-  userHasEnrollButNotTicket
+  userHasEnrollButNotTicket,
 };
