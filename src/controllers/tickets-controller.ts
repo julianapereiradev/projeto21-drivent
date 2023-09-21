@@ -3,6 +3,7 @@ import httpStatus from "http-status";
 import ticketsService from "@/services/tickets-service";
 import { AuthenticatedRequest } from "@/middlewares";
 import { CreateTicket } from "@/repositories/tickets-repository";
+import { invalidDataError } from "@/errors";
 
 export async function getTicketsType(req: AuthenticatedRequest, res: Response) {
   const resultGetTicketsType  = await ticketsService.getTicketsType();
@@ -15,11 +16,13 @@ export async function getTickets(req: AuthenticatedRequest, res: Response) {
 }
 
 export async function postTickets(req: AuthenticatedRequest, res: Response) {
-  const body = req.body as CreateTicket;
-  const resultPostTicket = await ticketsService.postTickets(body);
+  const { userId } = req;
+  const { ticketTypeId } = req.body as CreateTicket;
 
-  res.status(httpStatus.CREATED).send(resultPostTicket);
+  if (!ticketTypeId) throw invalidDataError('Quando ticketTypeId não é enviada')
 
-//PULEI A DE POST
+    const ticketTypes = await ticketsService.postTickets(userId, ticketTypeId);
+
+    return res.status(httpStatus.CREATED).send(ticketTypes);
 
 }
