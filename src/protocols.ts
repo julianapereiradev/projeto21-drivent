@@ -31,17 +31,9 @@ export type PaymentType = {
   ticketId: number;
   cardData: {
     issuer: string;
-    number: number;
+    number: string;
     name: string;
     expirationDate: Date;
     cvv: number;
   };
-};
-
-export type InCardData = {
-  issuer: string;
-  number: string;
-  name: string;
-  expirationDate: string;
-  cvv: string;
 };

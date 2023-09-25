@@ -1,13 +1,7 @@
-import { PaymentType } from '@/protocols';
 import Joi from 'joi';
+import { PaymentType } from '@/protocols';
 
 export const createPaymentsSchema = Joi.object<PaymentType>({
-  ticketId: Joi.number().integer(),
-  cardData: Joi.object ({
-    issuer: Joi.string(),
-    number: Joi.number().integer(),
-    name: Joi.string(),
-    expirationDate: Joi.string(),
-    cvv: Joi.string(),
-  }),
+  ticketId: Joi.number().required(),
+  cardData: Joi.object().required(),
 });
