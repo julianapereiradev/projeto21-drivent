@@ -1,53 +1,43 @@
-import { prisma } from '@/config';
-import { notFoundError, unauthorizedError } from '@/errors';
-import { PaymentType } from '@/protocols';
-import { paymentsRepository } from '@/repositories/payments-repository';
+import { invalidDataError, notFoundError, unauthorizedError } from '@/errors';
+import { CardPaymentParams, PaymentParams } from '@/protocols';
+import { enrollmentRepository, paymentsRepository, ticketsRepository } from '@/repositories';
 
-async function postPayments(userId: number, dataPaymentType: PaymentType) {
-  const { ticketId, cardData } = dataPaymentType;
+async function verifyTicketAndEnrollment(userId: number, ticketId: number) {
+  if (!ticketId || isNaN(ticketId)) throw invalidDataError('ticketId');
 
-  const idTicketExist = await paymentsRepository.getTickeIdWithEnrollment(ticketId);
-  if (!idTicketExist) throw notFoundError();
+  const ticket = await ticketsRepository.findTicketById(ticketId);
+  if (!ticket) throw notFoundError();
 
-  const enrollmentId = idTicketExist.enrollmentId;
-  const enrollment = await prisma.enrollment.findUnique({
-    where: { id: enrollmentId },
-    select: { userId: true },
-  });
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+  if (ticket.enrollmentId !== enrollment.id) throw unauthorizedError();
 
-  if (enrollment.userId !== userId) throw unauthorizedError();
+  return { ticket, enrollment };
+}
 
-  const postingPayment = await paymentsRepository.postPayments({
+async function getPaymentByTicketId(userId: number, ticketId: number) {
+  await verifyTicketAndEnrollment(userId, ticketId);
+
+  const payment = await paymentsRepository.findPaymentByTicketId(ticketId);
+
+  return payment;
+}
+
+async function paymentProcess(ticketId: number, userId: number, cardData: CardPaymentParams) {
+  const { ticket } = await verifyTicketAndEnrollment(userId, ticketId);
+
+  const paymentData: PaymentParams = {
     ticketId,
-    value: idTicketExist.TicketType.price,
+    value: ticket.TicketType.price,
     cardIssuer: cardData.issuer,
-    cardLastDigits: cardData.number.slice(-4),
-  });
+    cardLastDigits: cardData.number.toString().slice(-4),
+  };
 
-  await paymentsRepository.updatingTicketStatus(ticketId);
-  return postingPayment;
+  const payment = await paymentsRepository.createPayment(ticketId, paymentData);
+  await ticketsRepository.ticketProcessPayment(ticketId);
+  return payment;
 }
 
-async function getPayments(userId: number, ticketId: number) {
-  const idTicketExist = await paymentsRepository.getTicketIdInDB(ticketId);
-  if (!idTicketExist) throw notFoundError();
-
-  const enrollmentId = idTicketExist.enrollmentId;
-  const enrollment = await prisma.enrollment.findUnique({
-    where: { id: enrollmentId },
-    select: { userId: true },
-  });
-
-  if (enrollment.userId !== userId) throw unauthorizedError();
-
-  const getPayment = await paymentsRepository.getPayments(ticketId);
-
-  return getPayment;
-}
-
-const paymentsService = {
-  postPayments,
-  getPayments,
+export const paymentsService = {
+  getPaymentByTicketId,
+  paymentProcess,
 };
-
-export default paymentsService;
