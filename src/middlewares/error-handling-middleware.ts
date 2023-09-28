@@ -14,12 +14,6 @@ export function handleApplicationErrors(
     });
   }
 
-  if (err.name === 'PaymentRequired' || err.name === 'DuplicatedEmailError') {
-    return res.status(httpStatus.PAYMENT_REQUIRED).send({
-      message: err.message,
-    });
-  }
-
   if (err.name === 'ConflictError' || err.name === 'DuplicatedEmailError') {
     return res.status(httpStatus.CONFLICT).send({
       message: err.message,
@@ -28,6 +22,12 @@ export function handleApplicationErrors(
 
   if (err.name === 'InvalidCredentialsError' || err.name === 'JsonWebTokenError') {
     return res.status(httpStatus.UNAUTHORIZED).send({
+      message: err.message,
+    });
+  }
+
+  if (err.name === 'PaymentRequired') {
+    return res.status(httpStatus.PAYMENT_REQUIRED).send({
       message: err.message,
     });
   }
