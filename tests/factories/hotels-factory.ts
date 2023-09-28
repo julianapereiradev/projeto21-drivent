@@ -6,7 +6,7 @@ export async function createHotel() {
     data: {
       name: faker.name.findName(),
       image: faker.internet.url(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     },
   });
 }

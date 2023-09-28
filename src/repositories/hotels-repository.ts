@@ -14,5 +14,5 @@ async function findHotelId(id: number) {
 
 export const hotelsRepository = {
   findAllHotels,
-  findHotelId
+  findHotelId,
 };
