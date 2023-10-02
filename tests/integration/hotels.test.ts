@@ -62,7 +62,11 @@ describe('GET /hotels', () => {
     });
 
     it('should respond with status 404 when hotels is missing', async () => {
-      const token = await generateValidToken();
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const enrollment = await createEnrollmentWithAddress(user);
+      const ticketType = await createTicketType(false, true);
+      await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
 
       const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
 
@@ -116,7 +120,6 @@ describe('GET /hotels', () => {
       const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toEqual(httpStatus.OK);
-      //const dateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
       expect(response.body).toEqual([
         {
           id: hotel.id,
@@ -174,7 +177,12 @@ describe('GET /hotels/:hotelId', () => {
     });
 
     it('should respond with status 404 when hotels is missing', async () => {
-      const token = await generateValidToken();
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const enrollment = await createEnrollmentWithAddress(user);
+      const ticketType = await createTicketType(false, true);
+      await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
+
 
       const response = await server.get('/hotels/1').set('Authorization', `Bearer ${token}`);
 
@@ -228,7 +236,6 @@ describe('GET /hotels/:hotelId', () => {
       const response = await server.get(`/hotels/${hotel.id}`).set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toEqual(httpStatus.OK);
-      //const dateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
       expect(response.body).toEqual({
         id: hotel.id,
         name: hotel.name,
