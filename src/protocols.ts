@@ -1,4 +1,4 @@
-import { Payment, Ticket } from '@prisma/client';
+import { Booking, Payment, Ticket } from '@prisma/client';
 
 export type ApplicationError = {
   name: string;
@@ -31,8 +31,14 @@ export type CEP = {
 
 export type CreateTicketParams = Omit<Ticket, 'id' | 'createdAt' | 'updatedAt'>;
 
+export type CreateBookingParams = Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>;
+
 export type InputTicketBody = {
   ticketTypeId: number;
+};
+
+export type InputBookingBody = {
+  roomId: number;
 };
 
 export type CardPaymentParams = {
