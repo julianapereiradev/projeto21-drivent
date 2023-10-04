@@ -6,6 +6,14 @@ import { bookingsService } from '@/services/bookings-service';
 
 
 export async function getBookings(req: AuthenticatedRequest, res: Response) {
+    const { userId } = req;
+
+    const bookings = await bookingsService.getBookings(userId);
+
+    res.status(httpStatus.OK).send({
+        "id": bookings.id,
+        "Room": bookings.Room
+    });
 }
 
 export async function postBooking(req: AuthenticatedRequest, res: Response) {

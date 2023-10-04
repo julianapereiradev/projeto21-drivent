@@ -34,8 +34,18 @@ async function changingCapacityRoom(roomId: number, newCapacity: number) {
   return room;
 }
 
+async function findBookings(userId: number) {
+  return prisma.booking.findFirst({
+    where: {
+      userId: userId
+    },
+    include: { Room: true}
+  });
+}
+
 export const bookingsRepository = {
   checkingRoomId,
   createBooking,
-  changingCapacityRoom
+  changingCapacityRoom,
+  findBookings
 };
