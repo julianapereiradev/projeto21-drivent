@@ -1,51 +1,62 @@
 import { prisma } from '@/config';
-import { CreateBookingParams } from '@/protocols';
-
 
 async function checkingRoomId(roomId: number) {
-  const room = await prisma.room.findUnique({
+  const room = await prisma.room.findFirst({
     where: {
       id: roomId,
     },
+    include: {
+      Booking: true
+    }
   });
   
   return room;
 }
 
-async function createBooking(booking: CreateBookingParams) {
-  const result = await prisma.booking.create({
-    data: booking,
-    include: { Room: true },
-  });
-
-  return result;
-}
-
-async function changingCapacityRoom(roomId: number, newCapacity: number) {
-  const room = await prisma.room.update({
+async function updateBooking(bookingId: number, roomId: number) {
+  return prisma.booking.update({
     where: {
-      id: roomId,
+      id: bookingId
     },
     data: {
-      capacity: newCapacity,
+      roomId
     },
+    include: {
+      Room: true
+    }
   });
-  
-  return room;
+}
+
+
+async function createBooking(userId: number, roomId: number) {
+  return prisma.booking.create({
+    data: {
+      userId,
+      roomId
+    },
+    include: {
+      Room: true
+    }
+  });
 }
 
 async function findBookings(userId: number) {
   return prisma.booking.findFirst({
     where: {
-      userId: userId
+      User: {
+        id: userId,
+      }
     },
-    include: { Room: true}
+    include: {
+      Room: true
+    }
   });
 }
+
 
 export const bookingsRepository = {
   checkingRoomId,
   createBooking,
-  changingCapacityRoom,
-  findBookings
+  findBookings,
+  updateBooking
 };
