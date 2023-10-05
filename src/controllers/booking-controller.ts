@@ -2,7 +2,7 @@ import { Response } from 'express';
 import httpStatus from 'http-status';
 import { AuthenticatedRequest } from '@/middlewares';
 import { InputBookingBody } from '@/protocols';
-import { bookingsService } from '@/services/bookings-service';
+import { bookingsService } from '@/services/booking-service';
 
 
 export async function getBookings(req: AuthenticatedRequest, res: Response) {

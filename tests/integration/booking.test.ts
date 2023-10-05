@@ -7,7 +7,7 @@ import { createEnrollmentWithAddress, createPayment, createTicket, createTicketT
 import { cleanDb, generateValidToken } from '../helpers';
 import { createHotel, createRoomWithHotelId } from '../factories/hotels-factory';
 import app, { init } from '@/app';
-import { createBooking, createRoomWithNoCapacity } from '../factories/bookings-factory';
+import { createBooking, createRoomWithNoCapacity } from '../factories/booking-factory';
 
 beforeAll(async () => {
   await init();
