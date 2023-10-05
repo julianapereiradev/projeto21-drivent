@@ -49,10 +49,10 @@ async function updateBooking(userId: number, bookingId: number, roomId: number) 
 
 async function businessRules(userId: number) {
   const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
-  if(!enrollment) throw notFoundError();
+  //if(!enrollment) throw notFoundError();
 
   const ticket = await ticketsRepository.findTicketByEnrollmentId(enrollment.id);
-  if(!ticket) throw notFoundError();
+  //if(!ticket) throw notFoundError();
   const type = ticket.TicketType;
 
   if (ticket.status === TicketStatus.RESERVED || type.isRemote || !type.includesHotel) {
