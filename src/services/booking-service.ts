@@ -32,7 +32,7 @@ async function getBookings(userId: number) {
 
 async function updateBooking(userId: number, bookingId: number, roomId: number) {
   const userBooking = await bookingsRepository.findBookings(userId);
-  if(!userBooking) throw forbiddenError(); //usuário não tem reserva
+  if(!userBooking || userBooking.id !== bookingId) throw forbiddenError(); //roomId sem reserva
   await checkCapacityRoom(roomId);  //roomId não existe //roomId sem vaga
 
   const booking = await bookingsRepository.updateBooking(bookingId, roomId);
@@ -63,7 +63,7 @@ async function businessRules(userId: number) {
 async function checkCapacityRoom(roomId: number) {
   const room = await bookingsRepository.checkingRoomId(roomId);
   if(!room) throw notFoundError();
-  if(!room || room.capacity === room.Booking.length) throw forbiddenError();
+  if(room.capacity <= room.Booking.length) throw forbiddenError();
 }
 
 export const bookingsService = {
