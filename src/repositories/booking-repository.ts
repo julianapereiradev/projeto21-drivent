@@ -6,37 +6,36 @@ async function checkingRoomId(roomId: number) {
       id: roomId,
     },
     include: {
-      Booking: true
-    }
+      Booking: true,
+    },
   });
-  
+
   return room;
 }
 
 async function updateBooking(bookingId: number, roomId: number) {
   return prisma.booking.update({
     where: {
-      id: bookingId
+      id: bookingId,
     },
     data: {
-      roomId
+      roomId,
     },
     include: {
-      Room: true
-    }
+      Room: true,
+    },
   });
 }
-
 
 async function createBooking(userId: number, roomId: number) {
   return prisma.booking.create({
     data: {
       userId,
-      roomId
+      roomId,
     },
     include: {
-      Room: true
-    }
+      Room: true,
+    },
   });
 }
 
@@ -45,18 +44,17 @@ async function findBookings(userId: number) {
     where: {
       User: {
         id: userId,
-      }
+      },
     },
     include: {
-      Room: true
-    }
+      Room: true,
+    },
   });
 }
-
 
 export const bookingsRepository = {
   checkingRoomId,
   createBooking,
   findBookings,
-  updateBooking
+  updateBooking,
 };

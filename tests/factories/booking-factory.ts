@@ -4,10 +4,10 @@ import { prisma } from '@/config';
 export async function createBooking(userId: number, roomId: number) {
   return await prisma.booking.create({
     data: {
-      userId, 
+      userId,
       roomId,
       createdAt: faker.date.past(),
-      updatedAt: faker.date.past()
+      updatedAt: faker.date.past(),
     },
   });
 }

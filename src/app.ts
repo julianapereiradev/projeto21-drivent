@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import 'express-async-errors';
 import express, { Express } from 'express';
 import cors from 'cors';
+import { bookingsRouter } from './routers/bookings-router';
 import { handleApplicationErrors } from '@/middlewares';
 import {
   usersRouter,
@@ -13,7 +14,6 @@ import {
   hotelsRouter,
 } from '@/routers';
 import { loadEnv, connectDb, disconnectDB } from '@/config';
-import { bookingsRouter } from './routers/bookings-router';
 
 loadEnv();
 

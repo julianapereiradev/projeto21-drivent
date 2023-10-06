@@ -1,8 +1,7 @@
-import { bookingsRepository, enrollmentRepository, ticketsRepository } from '@/repositories';
-import { bookingsService } from '@/services/booking-service';
-import { createBooking } from '../factories/booking-factory';
 import { Address, Booking, Enrollment, Room, Ticket, TicketStatus, TicketType } from '@prisma/client';
 import faker from '@faker-js/faker';
+import { bookingsRepository, enrollmentRepository, ticketsRepository } from '@/repositories';
+import { bookingsService } from '@/services/booking-service';
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -372,7 +371,7 @@ describe('POST /booking', () => {
       updatedAt: new Date(),
       Booking: [],
     };
-    
+
     jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockResolvedValueOnce(mockEnrollmentId);
     jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockResolvedValueOnce(mockTicketUser);
     jest.spyOn(bookingsRepository, 'checkingRoomId').mockResolvedValueOnce(mockCreateRoom);
@@ -447,23 +446,22 @@ describe('POST /booking', () => {
 
     const mockCreateBook: Booking & {
       Room: Room;
-  } = {
-    id: 1,
-    userId: mockEnrollmentId.userId,
-    roomId: mockCreateRoom.id,
-    createdAt: new Date (),
-    updatedAt: new Date (),
-    Room: 
-      {
+    } = {
+      id: 1,
+      userId: mockEnrollmentId.userId,
+      roomId: mockCreateRoom.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      Room: {
         id: mockCreateRoom.id,
         name: mockCreateRoom.name,
         hotelId: mockCreateRoom.hotelId,
         createdAt: mockCreateRoom.createdAt,
         capacity: mockCreateRoom.capacity,
-        updatedAt: mockCreateRoom.updatedAt
-      }
-  }
-    
+        updatedAt: mockCreateRoom.updatedAt,
+      },
+    };
+
     jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockResolvedValueOnce(mockEnrollmentId);
     jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockResolvedValueOnce(mockTicketUser);
     jest.spyOn(bookingsRepository, 'checkingRoomId').mockResolvedValueOnce(mockCreateRoom);
@@ -472,7 +470,7 @@ describe('POST /booking', () => {
     const promise = await bookingsService.createBooking(mockEnrollmentId.userId, mockCreateRoom.id);
     expect(promise).toEqual({
       bookingId: mockCreateBook.id,
-      Room: mockCreateBook.Room
+      Room: mockCreateBook.Room,
     });
   });
 });
@@ -484,13 +482,221 @@ describe('PUT /booking/:bookingId', () => {
     const mockUpdateInput = {
       userId: 4,
       bookingId: 1,
-      roomId: 4
-    }
+      roomId: 4,
+    };
 
-    const promise = bookingsService.updateBooking(mockUpdateInput.userId, mockUpdateInput.bookingId, mockUpdateInput.roomId);
+    const promise = bookingsService.updateBooking(
+      mockUpdateInput.userId,
+      mockUpdateInput.bookingId,
+      mockUpdateInput.roomId,
+    );
     expect(promise).rejects.toEqual({
       name: 'ForbiddenError',
       message: 'Cannot do this action 403!',
+    });
+  });
+
+  it('should return 403 when userBooking.id is different from :bookingId', async () => {
+    const mockCreateBook: Booking & {
+      Room: Room;
+    } = {
+      id: 1,
+      userId: 1,
+      roomId: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      Room: {
+        id: 1,
+        name: faker.commerce.department(),
+        hotelId: 1,
+        createdAt: new Date(),
+        capacity: 5,
+        updatedAt: new Date(),
+      },
+    };
+
+    jest.spyOn(bookingsRepository, 'findBookings').mockResolvedValueOnce(mockCreateBook);
+
+    const mockUpdateInput = {
+      userId: mockCreateBook.userId,
+      bookingId: 2,
+      roomId: 1,
+    };
+
+    const promise = bookingsService.updateBooking(
+      mockUpdateInput.userId,
+      mockUpdateInput.bookingId,
+      mockUpdateInput.roomId,
+    );
+    expect(promise).rejects.toEqual({
+      name: 'ForbiddenError',
+      message: 'Cannot do this action 403!',
+    });
+  });
+
+  it('should return 404 when roomId doesnt exist', async () => {
+    const mockCreateBook: Booking & {
+      Room: Room;
+    } = {
+      id: 1,
+      userId: 1,
+      roomId: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      Room: {
+        id: 1,
+        name: faker.commerce.department(),
+        hotelId: 1,
+        createdAt: new Date(),
+        capacity: 5,
+        updatedAt: new Date(),
+      },
+    };
+
+    jest.spyOn(bookingsRepository, 'findBookings').mockResolvedValueOnce(mockCreateBook);
+    jest.spyOn(bookingsRepository, 'checkingRoomId').mockResolvedValueOnce(null);
+
+    const mockUpdateInput = {
+      userId: mockCreateBook.userId,
+      bookingId: mockCreateBook.id,
+      roomId: mockCreateBook.Room.id,
+    };
+
+    const promise = bookingsService.updateBooking(
+      mockUpdateInput.userId,
+      mockUpdateInput.bookingId,
+      mockUpdateInput.roomId,
+    );
+    expect(promise).rejects.toEqual({
+      name: 'NotFoundError',
+      message: 'No result for this search!',
+    });
+  });
+
+  it('should return 403 when room capacity is full', async () => {
+    const mockCreateBook: Booking & {
+      Room: Room;
+    } = {
+      id: 1,
+      userId: 1,
+      roomId: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      Room: {
+        id: 1,
+        name: faker.commerce.department(),
+        hotelId: 1,
+        createdAt: new Date(),
+        capacity: 5,
+        updatedAt: new Date(),
+      },
+    };
+
+    const mockCreateRoom: Room & {
+      Booking: Booking[];
+    } = {
+      id: 1,
+      name: faker.commerce.productName(),
+      capacity: 1,
+      hotelId: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      Booking: [
+        {
+          id: mockCreateBook.id,
+          userId: mockCreateBook.userId,
+          roomId: mockCreateBook.Room.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+    };
+
+    jest.spyOn(bookingsRepository, 'findBookings').mockResolvedValueOnce(mockCreateBook);
+    jest.spyOn(bookingsRepository, 'checkingRoomId').mockResolvedValueOnce(mockCreateRoom);
+
+    const mockUpdateInput = {
+      userId: mockCreateBook.userId,
+      bookingId: mockCreateBook.id,
+      roomId: mockCreateRoom.id,
+    };
+
+    const promise = bookingsService.updateBooking(
+      mockUpdateInput.userId,
+      mockUpdateInput.bookingId,
+      mockUpdateInput.roomId,
+    );
+    expect(promise).rejects.toEqual({
+      name: 'ForbiddenError',
+      message: 'Cannot do this action 403!',
+    });
+  });
+
+  it('should return sucess with updateBooking data', async () => {
+    const mockCreateBook: Booking & {
+      Room: Room;
+    } = {
+      id: 1,
+      userId: 1,
+      roomId: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      Room: {
+        id: 1,
+        name: faker.commerce.department(),
+        hotelId: 1,
+        createdAt: new Date(),
+        capacity: 5,
+        updatedAt: new Date(),
+      },
+    };
+
+    const mockCreateRoom: Room & {
+      Booking: Booking[];
+    } = {
+      id: 1,
+      name: faker.commerce.productName(),
+      capacity: 5,
+      hotelId: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      Booking: [
+        {
+          id: mockCreateBook.id,
+          userId: mockCreateBook.userId,
+          roomId: mockCreateBook.Room.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+    };
+
+    jest.spyOn(bookingsRepository, 'findBookings').mockResolvedValueOnce(mockCreateBook);
+    jest.spyOn(bookingsRepository, 'checkingRoomId').mockResolvedValueOnce(mockCreateRoom);
+    jest.spyOn(bookingsRepository, 'updateBooking').mockResolvedValueOnce(mockCreateBook);
+
+    const mockUpdateInput = {
+      userId: mockCreateBook.userId,
+      bookingId: mockCreateBook.id,
+      roomId: mockCreateBook.Room.id,
+    };
+
+    const promise = await bookingsService.updateBooking(
+      mockUpdateInput.userId,
+      mockUpdateInput.bookingId,
+      mockUpdateInput.roomId,
+    );
+
+    expect(promise).toEqual({
+      bookingId: expect.any(Number),
+      Room: {
+        id: expect.any(Number),
+        capacity: expect.any(Number),
+        createdAt: expect.any(Date),
+        hotelId: expect.any(Number),
+        name: expect.any(String),
+        updatedAt: expect.any(Date),
+      },
     });
   });
 });
